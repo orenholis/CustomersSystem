@@ -64,12 +64,57 @@ export default class Node {
 		return psc;
 	}
 
+	getNodesWithAtLeastChildren(childrenAtLeast) {
+		const nodes = [];
+		const cutOffSmallerChildren = node => Object.values(node.children).filter(n => n.childrenCount >= childrenAtLeast).sort((a, b) => b.childrenCount - a.childrenCount);
+
+		const goThrewChildren = children => {
+			for (const c of children) {
+				const cutOffChildren = cutOffSmallerChildren(c);
+
+				if (cutOffChildren.length === 0) {
+					nodes.push(c);
+				} else {
+					return goThrewChildren(cutOffChildren);
+				}
+			}
+		}
+
+		goThrewChildren(cutOffSmallerChildren(this));
+		return nodes;
+	}
+
 	divideIntoGroups(groups=config.kohort_filter_number) {
 		const groupRoots = {
 			others: {}
 		};
 
-		const childrenByCount = Object.values(this.children).sort((a, b) => b.childrenCount - a.childrenCount);
+		let childrenByCount = Object.values(this.children).sort((a, b) => b.childrenCount - a.childrenCount);
+		let othersSize = 0;
+
+		for (let i = groups - 1; i < childrenByCount.length; i++) {
+			othersSize += childrenByCount[i].childrenCount;
+		}
+
+		if (othersSize < childrenByCount[0].childrenCount && childrenByCount.length > groups) {
+			const newNodes = {};
+			// Minus one because others is group too
+			for (let i = groups - 2; i > 0; i--) {
+				const value = childrenByCount[i].childrenCount;
+
+				for (let j = 0; j < i; j++) {
+					const nodes = childrenByCount[j].getNodesWithAtLeastChildren(value);
+
+					// Removing duplicities
+					for (const n of nodes) {
+						newNodes[n.getPSCPref()] = n;
+					}
+				}
+			}
+
+			childrenByCount = childrenByCount.concat(Object.values(newNodes));
+			childrenByCount.sort((a, b) => b.childrenCount - a.childrenCount);
+		}
 
 		let i = 0;
 		for (const c of childrenByCount) {
