@@ -1,5 +1,6 @@
 import {useDispatch, useSelector} from "react-redux";
 import {filterCustomers, setFilters} from "../store/CustomersSlice";
+import {useEffect} from "react";
 
 export const KohortsList = () => {
 	const dispatch = useDispatch();
@@ -8,6 +9,10 @@ export const KohortsList = () => {
 	const level = useSelector(state => state.customers.othersLevel);
 
 	const groups = rootKohort && rootKohort.getGroupsWithLevel(folder, level);
+
+	useEffect(() => {
+		window.onpopstate = () => drillUp();
+	})
 
 	const getKohortaStartingWith = (koh, others) => others ? Object.values(koh).map(k => k.getPSCPref()) : [koh.getPSCPref()]
 
