@@ -40,6 +40,7 @@ export const customersSlice = createSlice({
 		// Customers
 		displayed: [],
 		start: 0,
+		filteringCustomers: false,
 
 		// Filters
 		startingWith: '',
@@ -83,11 +84,15 @@ export const customersSlice = createSlice({
 			});
 
 		builder
+			.addCase(filterCustomers.pending, (state, action) => {
+				state.filteringCustomers = true;
+			})
 			.addCase(filterCustomers.fulfilled, (state, action) => {
 				const customers = action.payload.customers;
-				state.start = action.payload.start;
-				state.displayed = state.start === 0 ? customers : state.displayed.concat(customers);
+				state.displayed = action.payload.start === 0 ? customers : state.displayed.concat(customers);
+				state.start = action.payload.start + 100;
 				state.customersCount = action.payload.count ? Number(action.payload.count) : state.customersCount;
+				state.filteringCustomers = false;
 			})
 			.addCase(filterCustomers.rejected, (state, action) => {
 				state.error = action.error.message
