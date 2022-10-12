@@ -23,7 +23,8 @@ export const filterCustomers = createAsyncThunk(
 		return {
 			customers,
 			start,
-			count: json.winstrom['@rowCount']
+			count: json.winstrom['@rowCount'],
+			startingWith
 		};
 	}
 );
@@ -40,7 +41,6 @@ export const customersSlice = createSlice({
 		// Customers
 		displayed: [],
 		start: 0,
-		filteringCustomers: false,
 
 		// Filters
 		startingWith: '',
@@ -49,13 +49,12 @@ export const customersSlice = createSlice({
 	},
 	reducers: {
 		setFilters(state, action) {
-			state.startingWith = action.payload.startingWith;
 			state.othersLevel = action.payload.othersLevel;
 			state.folder = action.payload.folder;
 
 			const params = new URLSearchParams('');
 
-			for (const s of state.startingWith) {
+			for (const s of action.payload.startingWith) {
 				params.append('startingWith', s);
 			}
 
@@ -84,15 +83,12 @@ export const customersSlice = createSlice({
 			});
 
 		builder
-			.addCase(filterCustomers.pending, (state, action) => {
-				state.filteringCustomers = true;
-			})
 			.addCase(filterCustomers.fulfilled, (state, action) => {
 				const customers = action.payload.customers;
 				state.displayed = action.payload.start === 0 ? customers : state.displayed.concat(customers);
 				state.start = action.payload.start + 100;
 				state.customersCount = action.payload.count ? Number(action.payload.count) : state.customersCount;
-				state.filteringCustomers = false;
+				state.startingWith = action.payload.startingWith;
 			})
 			.addCase(filterCustomers.rejected, (state, action) => {
 				state.error = action.error.message

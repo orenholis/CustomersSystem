@@ -9,7 +9,6 @@ export const Customers = () => {
 	const start = useSelector(state => state.customers.start);
 	const customersCount = useSelector(state => state.customers.customersCount);
 	const startingWith = useSelector(state => state.customers.startingWith);
-	const filteringCustomers = useSelector(state => state.customers.filteringCustomers);
 	const error = useSelector(state => state.customers.error);
 
 	useEffect(() => {
@@ -17,26 +16,30 @@ export const Customers = () => {
 			dispatch(getPSCs());
 		}
 
-		if (customersStatus === 'succeeded' && !filteringCustomers && start === 0) {
+		if (customersStatus === 'succeeded' && start === 0) {
 			dispatch(filterCustomers({startingWith, start}));
 		}
 	}, [customersStatus, dispatch]);
 
 	useEffect(() => {
-		if (customersCount > 0 && !filteringCustomers) {
-			let scrollDisabled = false;
+		let scrollDisabled = false;
 
-			window.addEventListener('scroll', () => {
-				if (!scrollDisabled) {
-					const scrolledTwoThirds = document.documentElement.scrollTop > (document.documentElement.getBoundingClientRect().height / 3 * 2);
-					if (scrolledTwoThirds && customersCount > start) {
-						scrollDisabled = true;
-						dispatch(filterCustomers({startingWith, start: start}));
-					}
+		const handleScroll = () => {
+			if (!scrollDisabled) {
+				const scrolledTwoThirds = document.documentElement.scrollTop > (document.documentElement.getBoundingClientRect().height / 3 * 2);
+				if (scrolledTwoThirds) {
+					scrollDisabled = true;
+					dispatch(filterCustomers({startingWith: startingWith, start: start}));
 				}
-			}, {passive: true});
+			}
+		};
+
+		if (customersCount > start) {
+			window.addEventListener('scroll', handleScroll, {passive: true});
 		}
-	}, [filteringCustomers, start, customersCount])
+
+		return () => window.removeEventListener('scroll', handleScroll, {passive: true})
+	}, [start, customersCount, startingWith, dispatch])
 
 	if (error) {
 		alert(`We are sorry, but something went wrong. Please try it again later. Error: ${error}`);
