@@ -27,7 +27,7 @@ export const KohortsList = () => {
 		dispatch(filterCustomers({startingWith, start: 0}));
 		dispatch(setFilters({
 			startingWith,
-			othersLevel: others ? level + 1 : level,
+			othersLevel: others ? level + 1 : 0,
 			folder: others ? folder : kohorta.getPSCPref()
 		}));
 	};
